@@ -5,6 +5,7 @@ const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6u
 
 export default function AppQR() {
   const [globalFiles, setGlobalFiles] = useState({ inf: '', med: '' });
+  const [centrosList, setCentrosList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
   const [expiryDateStr, setExpiryDateStr] = useState('');
@@ -13,6 +14,7 @@ export default function AppQR() {
     nombre: '',
     dni: '',
     empresa: '',
+    centro: '',
     conformidad: false
   });
 
@@ -22,10 +24,14 @@ export default function AppQR() {
       .then(data => {
         if (data.status === "success") {
           setGlobalFiles(data.globalFiles);
+          if (data.centros && data.centros.length > 0) {
+            setCentrosList(data.centros);
+            setFormData(prev => ({ ...prev, centro: data.centros[0] }));
+          }
         }
       })
       .catch(err => {
-        console.error("Error cargando archivos globales:", err);
+        console.error("Error cargando datos iniciales:", err);
       });
   }, []);
 
@@ -46,7 +52,6 @@ export default function AppQR() {
       const result = await response.json();
 
       if (result.status === "success") {
-        // Calcular fecha de caducidad (exactamente 6 meses a partir de hoy)
         const fechaActual = new Date();
         fechaActual.setMonth(fechaActual.getMonth() + 6);
         const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -90,9 +95,13 @@ export default function AppQR() {
               <span className="text-slate-400 font-semibold">DNI / NIE:</span>
               <span className="font-bold text-slate-800">{formData.dni}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between border-b pb-1.5">
               <span className="text-slate-400 font-semibold">Empresa:</span>
               <span className="font-bold text-slate-800">{formData.empresa}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400 font-semibold">Centro:</span>
+              <span className="font-bold text-blue-600">{formData.centro}</span>
             </div>
           </div>
 
@@ -148,7 +157,7 @@ export default function AppQR() {
                 href={globalFiles.inf || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.inf) { e.preventDefault(); alert("Documento de Información de Riesgos pendiente de configurar en la hoja de cálculo."); } }}
+                onClick={(e) => { if(!globalFiles.inf) { e.preventDefault(); alert("Documento de Información de Riesgos pendiente de configurar."); } }}
                 className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Información de Riesgos a Terceros</span>
@@ -159,7 +168,7 @@ export default function AppQR() {
                 href={globalFiles.med || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.med) { e.preventDefault(); alert("Documento de Medidas de Emergencia pendiente de configurar en la hoja de cálculo."); } }}
+                onClick={(e) => { if(!globalFiles.med) { e.preventDefault(); alert("Documento de Medidas de Emergencia pendiente de configurar."); } }}
                 className="p-3.5 bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Medidas de Emergencia</span>
@@ -210,6 +219,24 @@ export default function AppQR() {
                 value={formData.empresa}
                 onChange={e => setFormData({...formData, empresa: e.target.value})}
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Centro de Trabajo</label>
+              <select 
+                required
+                className="w-full px-4 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.centro}
+                onChange={e => setFormData({...formData, centro: e.target.value})}
+              >
+                {centrosList.length === 0 ? (
+                  <option value="">Cargando centros...</option>
+                ) : (
+                  centrosList.map((c, idx) => (
+                    <option key={idx} value={c}>{c}</option>
+                  ))
+                )}
+              </select>
             </div>
 
             {/* Checkbox Legal */}
