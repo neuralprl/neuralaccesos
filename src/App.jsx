@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ShieldCheck, FileDown, CheckCircle2, UserCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShieldCheck, FileDown, CheckCircle2, UserCheck, Calendar, Download } from 'lucide-react';
 
 const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6uk7rUZ3BUUt4fbntpSKLQS_dXbccqKooqmU8bwqPWkfAtaKcEuc/exec";
 
@@ -7,6 +7,8 @@ export default function AppQR() {
   const [globalFiles, setGlobalFiles] = useState({ inf: '', med: '' });
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
+  const [expiryDateStr, setExpiryDateStr] = useState('');
+  const passCardRef = useRef(null);
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -45,6 +47,11 @@ export default function AppQR() {
       const result = await response.json();
 
       if (result.status === "success") {
+        const fechaActual = new Date();
+        fechaActual.setMonth(fechaActual.getMonth() + 6);
+        const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+        setExpiryDateStr(fechaActual.toLocaleDateString('es-ES', opciones));
+
         setSuccessSent(true);
       } else {
         alert("Error del servidor: " + (result.message || "No se pudo registrar el acceso"));
@@ -57,25 +64,91 @@ export default function AppQR() {
     }
   };
 
+  // Función para descargar el pase como un archivo de texto con diseño o simular captura
+  // Nota: Para descarga directa de imagen web sin dependencias pesadas, creamos un canvas o descargamos un certificado limpio.
+  const handleDownloadPass = () => {
+    const passContent = `==================================================
+           GRUPO NEURAL - PASE OFICIAL DE ACCESO PRL
+==================================================
+ESTADO: AUTORIZADO / VALIDADO
+--------------------------------------------------
+- Trabajador: ${formData.nombre}
+- DNI / NIE: ${formData.dni}
+- Empresa: ${formData.empresa}
+- Validez: 6 Meses (Hasta el ${expiryDateStr})
+--------------------------------------------------
+INSTRUCCIÓN PARA EL CENTRO:
+"ENSEÑA ESTA IMAGEN AL CENTRO PARA QUE AUTORICE TU ENTRADA"
+==================================================`;
+
+    const blob = new Blob([passContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Pase_Acceso_Neural_${formData.dni}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (successSent) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans text-white">
-        <div className="bg-white text-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center space-y-4">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans text-white">
+        <div ref={passCardRef} className="bg-white text-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center space-y-6 border-4 border-emerald-500">
+          
+          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-12 h-12" />
           </div>
-          <h2 className="text-2xl font-bold">¡Acceso Validado!</h2>
-          <p className="text-sm text-slate-600">
-            Tus datos y tu declaración de conformidad han sido registrados correctamente en el sistema de seguridad de Grupo Neural. Ya puedes acceder al centro.
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">¡Acceso Validado!</h2>
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">
+              Grupo Neural • Control de Acceso PRL
+            </p>
+          </div>
+
+          {/* Tarjeta de validez y trabajador */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs">
+            <div className="flex justify-between border-b pb-1.5">
+              <span className="text-slate-400 font-semibold">Trabajador:</span>
+              <span className="font-bold text-slate-800">{formData.nombre}</span>
+            </div>
+            <div className="flex justify-between border-b pb-1.5">
+              <span className="text-slate-400 font-semibold">DNI / NIE:</span>
+              <span className="font-bold text-slate-800">{formData.dni}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400 font-semibold">Empresa:</span>
+              <span className="font-bold text-slate-800">{formData.empresa}</span>
+            </div>
+          </div>
+
+          {/* Aviso de Caducidad (6 meses) */}
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl flex items-center gap-3 text-left">
+            <Calendar className="w-6 h-6 text-amber-600 shrink-0" />
+            <div className="text-xs leading-snug">
+              <span className="font-bold block">Validez del pase:</span>
+              Válida hasta el <b>{expiryDateStr}</b> (6 meses de vigencia).
+            </div>
+          </div>
+
+          {/* Instrucción clara para el centro */}
+          <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-md text-xs font-bold leading-relaxed tracking-wide">
+            📱 ENSEÑA ESTA IMAGEN AL CENTRO PARA QUE AUTORICE TU ENTRADA
+          </div>
+
+          {/* Botón de descarga / guardado */}
+          <button 
+            onClick={handleDownloadPass}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow transition"
+          >
+            <Download className="w-4 h-4" /> Guardar Justificante de Pase
+          </button>
+
+          <p className="text-[11px] text-slate-400 italic">
+            Esta página permanecerá bloqueada como justificante oficial hasta que la cierres.
           </p>
-          <div className="pt-4">
-            <button 
-              onClick={() => { setSuccessSent(false); setFormData({ nombre: '', dni: '', empresa: '', conformidad: false }); }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition"
-            >
-              Registrar otro acceso
-            </button>
-          </div>
+
         </div>
       </div>
     );
@@ -192,7 +265,7 @@ export default function AppQR() {
               disabled={submitting}
               className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition"
             >
-              <UserCheck className="w-5 h-5" /> {submitting ? 'Validando acceso...' : 'Validar y Confirmar Acceso'}
+              <UserCheck className="w-5 h-5" /> {submitting ? 'Generando pase...' : 'Validar y Generar Pase de Entrada'}
             </button>
           </form>
 
