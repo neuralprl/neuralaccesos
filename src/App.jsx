@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, FileDown, CheckCircle2, AlertTriangle, Send, UserCheck } from 'lucide-react';
+import { ShieldCheck, FileDown, CheckCircle2, UserCheck } from 'lucide-react';
 
-const SCRIPT_URL_QR = "PEGAR_AQUI_LA_URL_DE_LA_WEB_APP_DEL_NUEVO_GAS";
+const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6uk7rUZ3BUUt4fbntpSKLQS_dXbccqKooqmU8bwqPWkfAtaKcEuc/exec";
 
 export default function AppQR() {
   const [globalFiles, setGlobalFiles] = useState({ inf: '', med: '' });
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
 
@@ -23,11 +22,9 @@ export default function AppQR() {
         if (data.status === "success") {
           setGlobalFiles(data.globalFiles);
         }
-        setLoading(false);
       })
       .catch(err => {
-        console.error("Error cargando archivos:", err);
-        setLoading(false);
+        console.error("Error cargando archivos globales:", err);
       });
   }, []);
 
@@ -50,11 +47,11 @@ export default function AppQR() {
       if (result.status === "success") {
         setSuccessSent(true);
       } else {
-        alert("Error: " + (result.message || "No se pudo registrar el acceso"));
+        alert("Error del servidor: " + (result.message || "No se pudo registrar el acceso"));
       }
     } catch (err) {
-      console.error("Error:", err);
-      alert("Error de conexión.");
+      console.error("Error de red:", err);
+      alert("Error de conexión con el servidor. Comprueba tu red.");
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +66,7 @@ export default function AppQR() {
           </div>
           <h2 className="text-2xl font-bold">¡Acceso Validado!</h2>
           <p className="text-sm text-slate-600">
-            Tus datos y tu declaración de conformidad han sido registrados correctamente. Ya puedes acceder al centro de trabajo con total seguridad.
+            Tus datos y tu declaración de conformidad han sido registrados correctamente en el sistema de seguridad de Grupo Neural. Ya puedes acceder al centro.
           </p>
           <div className="pt-4">
             <button 
@@ -110,7 +107,7 @@ export default function AppQR() {
                 href={globalFiles.inf || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.inf) { e.preventDefault(); alert("Documento no disponible temporalmente."); } }}
+                onClick={(e) => { if(!globalFiles.inf) { e.preventDefault(); alert("Documento de Información de Riesgos pendiente de configurar en la hoja de cálculo."); } }}
                 className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Información de Riesgos a Terceros</span>
@@ -121,7 +118,7 @@ export default function AppQR() {
                 href={globalFiles.med || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.med) { e.preventDefault(); alert("Documento no disponible temporalmente."); } }}
+                onClick={(e) => { if(!globalFiles.med) { e.preventDefault(); alert("Documento de Medidas de Emergencia pendiente de configurar en la hoja de cálculo."); } }}
                 className="p-3.5 bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Medidas de Emergencia</span>
@@ -185,7 +182,7 @@ export default function AppQR() {
                   onChange={e => setFormData({...formData, conformidad: e.target.checked})}
                 />
                 <span className="text-xs text-slate-600 leading-relaxed">
-                  Declaro bajo mi responsabilidad que he recibido, leído y comprendido la información de riesgos y medidas de emergencia, y que dispongo de los **EPIs adecuados, formación preventiva y aptitud médica (VS)** en vigor para los trabajos a realizar.
+                  Declaro bajo mi responsabilidad que he recibido, leído y comprendido la información de riesgos y medidas de emergencia, y que dispongo de los <b>EPIs adecuados, formación preventiva y aptitud médica (VS)</b> en vigor para los trabajos a realizar.
                 </span>
               </label>
             </div>
