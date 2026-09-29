@@ -5,7 +5,6 @@ const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6u
 
 export default function AppQR() {
   const [globalFiles, setGlobalFiles] = useState({ inf: '', med: '' });
-  const [centrosList, setCentrosList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
   const [expiryDateStr, setExpiryDateStr] = useState('');
@@ -24,14 +23,10 @@ export default function AppQR() {
       .then(data => {
         if (data.status === "success") {
           setGlobalFiles(data.globalFiles);
-          if (data.centros && data.centros.length > 0) {
-            setCentrosList(data.centros);
-            setFormData(prev => ({ ...prev, centro: data.centros[0] }));
-          }
         }
       })
       .catch(err => {
-        console.error("Error cargando datos iniciales:", err);
+        console.error("Error cargando archivos globales:", err);
       });
   }, []);
 
@@ -223,20 +218,14 @@ export default function AppQR() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Centro de Trabajo</label>
-              <select 
+              <input 
+                type="text" 
                 required
-                className="w-full px-4 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Ej. Sede Central / Planta 2"
                 value={formData.centro}
                 onChange={e => setFormData({...formData, centro: e.target.value})}
-              >
-                {centrosList.length === 0 ? (
-                  <option value="">Cargando centros...</option>
-                ) : (
-                  centrosList.map((c, idx) => (
-                    <option key={idx} value={c}>{c}</option>
-                  ))
-                )}
-              </select>
+              />
             </div>
 
             {/* Checkbox Legal */}
