@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, FileDown, CheckCircle2, UserCheck, Calendar, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, FileDown, CheckCircle2, UserCheck, Calendar, Smartphone } from 'lucide-react';
 
 const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6uk7rUZ3BUUt4fbntpSKLQS_dXbccqKooqmU8bwqPWkfAtaKcEuc/exec";
 
@@ -8,7 +8,6 @@ export default function AppQR() {
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
   const [expiryDateStr, setExpiryDateStr] = useState('');
-  const passCardRef = useRef(null);
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -47,6 +46,7 @@ export default function AppQR() {
       const result = await response.json();
 
       if (result.status === "success") {
+        // Calcular fecha de caducidad (exactamente 6 meses a partir de hoy)
         const fechaActual = new Date();
         fechaActual.setMonth(fechaActual.getMonth() + 6);
         const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -64,51 +64,24 @@ export default function AppQR() {
     }
   };
 
-  // Función para descargar el pase como un archivo de texto con diseño o simular captura
-  // Nota: Para descarga directa de imagen web sin dependencias pesadas, creamos un canvas o descargamos un certificado limpio.
-  const handleDownloadPass = () => {
-    const passContent = `==================================================
-           GRUPO NEURAL - PASE OFICIAL DE ACCESO PRL
-==================================================
-ESTADO: AUTORIZADO / VALIDADO
---------------------------------------------------
-- Trabajador: ${formData.nombre}
-- DNI / NIE: ${formData.dni}
-- Empresa: ${formData.empresa}
-- Validez: 6 Meses (Hasta el ${expiryDateStr})
---------------------------------------------------
-INSTRUCCIÓN PARA EL CENTRO:
-"ENSEÑA ESTA IMAGEN AL CENTRO PARA QUE AUTORICE TU ENTRADA"
-==================================================`;
-
-    const blob = new Blob([passContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Pase_Acceso_Neural_${formData.dni}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   if (successSent) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans text-white">
-        <div ref={passCardRef} className="bg-white text-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center space-y-6 border-4 border-emerald-500">
+        <div className="bg-white text-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 border-4 border-emerald-500">
           
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-12 h-12" />
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-10 h-10" />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">¡Acceso Validado!</h2>
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
               Grupo Neural • Control de Acceso PRL
             </p>
           </div>
 
-          {/* Tarjeta de validez y trabajador */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs">
+          {/* Tarjeta de validez y datos del trabajador */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs shadow-inner">
             <div className="flex justify-between border-b pb-1.5">
               <span className="text-slate-400 font-semibold">Trabajador:</span>
               <span className="font-bold text-slate-800">{formData.nombre}</span>
@@ -128,25 +101,20 @@ INSTRUCCIÓN PARA EL CENTRO:
             <Calendar className="w-6 h-6 text-amber-600 shrink-0" />
             <div className="text-xs leading-snug">
               <span className="font-bold block">Validez del pase:</span>
-              Válida hasta el <b>{expiryDateStr}</b> (6 meses de vigencia).
+              Válido hasta el <b>{expiryDateStr}</b> (6 meses de vigencia).
             </div>
           </div>
 
-          {/* Instrucción clara para el centro */}
-          <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-md text-xs font-bold leading-relaxed tracking-wide">
-            📱 ENSEÑA ESTA IMAGEN AL CENTRO PARA QUE AUTORICE TU ENTRADA
+          {/* Instrucción clara para hacer captura */}
+          <div className="bg-emerald-600 text-white p-4 rounded-2xl shadow-md text-xs font-bold leading-relaxed tracking-wide space-y-1">
+            <div className="flex items-center justify-center gap-1.5 text-emerald-100 uppercase text-[10px] tracking-widest">
+              <Smartphone className="w-4 h-4" /> Acción Obligatoria
+            </div>
+            📷 HAZ UNA CAPTURA DE PANTALLA DE ESTE PASE Y ENSÉÑALA EN EL CENTRO PARA AUTORIZAR TU ENTRADA
           </div>
 
-          {/* Botón de descarga / guardado */}
-          <button 
-            onClick={handleDownloadPass}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow transition"
-          >
-            <Download className="w-4 h-4" /> Guardar Justificante de Pase
-          </button>
-
           <p className="text-[11px] text-slate-400 italic">
-            Esta página permanecerá bloqueada como justificante oficial hasta que la cierres.
+            Esta página permanecerá abierta como justificante. Ya puedes cerrar la pestaña cuando guardes tu captura.
           </p>
 
         </div>
