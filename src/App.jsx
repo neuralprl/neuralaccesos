@@ -80,7 +80,6 @@ export default function AppQR() {
             </p>
           </div>
 
-          {/* Tarjeta de validez y datos del trabajador */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs shadow-inner">
             <div className="flex justify-between border-b pb-1.5">
               <span className="text-slate-400 font-semibold">Trabajador:</span>
@@ -100,7 +99,6 @@ export default function AppQR() {
             </div>
           </div>
 
-          {/* Aviso de Caducidad (6 meses) */}
           <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl flex items-center gap-3 text-left">
             <Calendar className="w-6 h-6 text-amber-600 shrink-0" />
             <div className="text-xs leading-snug">
@@ -109,7 +107,6 @@ export default function AppQR() {
             </div>
           </div>
 
-          {/* Instrucción clara para hacer captura */}
           <div className="bg-emerald-600 text-white p-4 rounded-2xl shadow-md text-xs font-bold leading-relaxed tracking-wide space-y-1">
             <div className="flex items-center justify-center gap-1.5 text-emerald-100 uppercase text-[10px] tracking-widest">
               <Smartphone className="w-4 h-4" /> Acción Obligatoria
@@ -130,7 +127,6 @@ export default function AppQR() {
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 p-4 max-w-lg mx-auto justify-center">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden border">
         
-        {/* Cabecera */}
         <div className="bg-slate-800 text-white p-6 text-center space-y-2">
           <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
             <ShieldCheck className="w-7 h-7 text-white" />
@@ -141,7 +137,6 @@ export default function AppQR() {
 
         <div className="p-6 space-y-6">
           
-          {/* Paso 1: Descarga de Documentos */}
           <div className="space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Paso 1: Consulta obligatoria previa
@@ -152,7 +147,6 @@ export default function AppQR() {
                 href={globalFiles.inf || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.inf) { e.preventDefault(); alert("Documento de Información de Riesgos pendiente de configurar."); } }}
                 className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Información de Riesgos a Terceros</span>
@@ -163,7 +157,6 @@ export default function AppQR() {
                 href={globalFiles.med || "#"} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                onClick={(e) => { if(!globalFiles.med) { e.preventDefault(); alert("Documento de Medidas de Emergencia pendiente de configurar."); } }}
                 className="p-3.5 bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm"
               >
                 <span className="flex items-center gap-2"><FileDown className="w-4 h-4" /> Medidas de Emergencia</span>
@@ -174,7 +167,6 @@ export default function AppQR() {
 
           <hr />
 
-          {/* Paso 2: Formulario y Declaración */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Paso 2: Datos y Declaración Responsable
@@ -228,7 +220,6 @@ export default function AppQR() {
               />
             </div>
 
-            {/* Checkbox Legal */}
             <div className="p-4 bg-slate-50 border rounded-xl space-y-2">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input 
