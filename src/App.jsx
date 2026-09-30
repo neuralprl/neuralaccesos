@@ -4,7 +4,10 @@ import { ShieldCheck, FileDown, CheckCircle2, UserCheck, Calendar, Smartphone } 
 const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6uk7rUZ3BUUt4fbntpSKLQS_dXbccqKooqmU8bwqPWkfAtaKcEuc/exec";
 
 export default function AppQR() {
-  const [globalFiles, setGlobalFiles] = useState({ inf: '', med: '' });
+  const [globalFiles, setGlobalFiles] = useState({ 
+  inf: 'https://gruponeural.sharepoint.com/:b:/r/sites/PRL/Documentacin%20Centros/Informaci%C3%B3n%20de%20Riesgos%20a%20Terceros.pdf?d=w02e001b57f324d3ba3718cd2d30b87cc&csf=1&web=1&e=cocmAV', 
+  med: 'https://gruponeural.sharepoint.com/:b:/r/sites/PRL/Documentacin%20Centros/Medidas%20de%20Emergencia.pdf?d=w7df79c286dc64382b7f87cff9cdd8318&csf=1&web=1&e=RGTMWJ' 
+});
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
   const [expiryDateStr, setExpiryDateStr] = useState('');
