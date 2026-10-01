@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { ShieldCheck, FileText, CheckCircle2, UserCheck, Calendar, Smartphone, ArrowLeft, AlertTriangle, Flame } from 'lucide-react';
+import { ShieldCheck, FileText, CheckCircle2, UserCheck, Calendar, Smartphone, ArrowLeft, AlertTriangle, Flame, Lock } from 'lucide-react';
+
+// ⚠️ Asegúrate de que esta URL sea la correcta de tu despliegue actual de Google Apps Script
+const SCRIPT_URL_QR = "https://script.google.com/macros/s/AKfycbz-0tXQixABYKrZ6uk7rUZ3BUUt4fbntpSKLQS_dXbccqKooqmU8bwqPWkfAtaKcEuc/exec";
 
 export default function AppQR() {
-  // Estado para controlar qué vista se muestra: 'form', 'inf' o 'med'
   const [currentView, setCurrentView] = useState('form');
+
+  const [readInf, setReadInf] = useState(false);
+  const [readMed, setReadMed] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
@@ -19,25 +24,47 @@ export default function AppQR() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!readInf || !readMed) {
+      alert("⚠️ Debes leer obligatoriamente la 'Información de Riesgos' y las 'Medidas de Emergencia' antes de continuar.");
+      return;
+    }
+
     if (!formData.conformidad) {
       alert("Debes marcar la casilla de aceptación y declaración responsable.");
       return;
     }
 
     setSubmitting(true);
-    // Simulación de envío o conexión con tu Apps Script
-    setTimeout(() => {
-      const fechaActual = new Date();
-      fechaActual.setMonth(fechaActual.getMonth() + 6);
-      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
-      setExpiryDateStr(fechaActual.toLocaleDateString('es-ES', opciones));
+    
+    try {
+      // LLAMADA REAL A GOOGLE APPS SCRIPT PARA GUARDAR EN SHEETS Y ENVIAR EMAIL
+      const response = await fetch(SCRIPT_URL_QR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(formData)
+      });
+      const result = await response.json();
+
+      if (result.status === "success") {
+        const fechaActual = new Date();
+        fechaActual.setMonth(fechaActual.getMonth() + 6);
+        const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+        setExpiryDateStr(fechaActual.toLocaleDateString('es-ES', opciones));
+        setSuccessSent(true);
+      } else {
+        alert("Error del servidor: " + (result.message || "No se pudo registrar el acceso"));
+      }
+    } catch (err) {
+      console.error("Error de red:", err);
+      alert("Error de conexión con el servidor. Comprueba tu red.");
+    } finally {
       setSubmitting(false);
-      setSuccessSent(true);
-    }, 1000);
+    }
   };
 
   // ==========================================
-  // PÁGINA WEB: INFORMACIÓN DE RIESGOS (neuralinf.vercel.app)
+  // PÁGINA WEB: INFORMACIÓN DE RIESGOS (INF)
   // ==========================================
   if (currentView === 'inf') {
     return (
@@ -55,15 +82,14 @@ export default function AppQR() {
               </div>
             </div>
             <button 
-              onClick={() => setCurrentView('form')}
+              onClick={() => { setReadInf(true); setCurrentView('form'); }}
               className="bg-white hover:bg-emerald-50 text-emerald-900 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-md"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al formulario
+              <ArrowLeft className="w-4 h-4" /> Entendido y Volver
             </button>
           </div>
 
           <div className="p-6 sm:p-8 space-y-6 text-xs sm:text-sm leading-relaxed text-slate-300 overflow-y-auto max-h-[75vh]">
-            
             <div className="bg-emerald-950/40 border border-emerald-800/60 p-4 rounded-2xl text-emerald-200">
               <p className="font-semibold">
                 Los proveedores y empresas concurrentes que accedan a las instalaciones deberán cumplir las normas de seguridad y salud establecidas por el centro, colaborando activamente en la coordinación de actividades empresariales y respetando las instrucciones del personal responsable.
@@ -110,43 +136,14 @@ export default function AppQR() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-amber-500 rounded-full"></span> 3. Riesgos Ergonómicos y Psicosociales
-              </h2>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Manipulación manual de cargas</h3>
-                  <p className="text-slate-400 text-xs">Riesgo de lesiones musculoesqueléticas. Emplee ayudas mecánicas y técnicas correctas de levantamiento.</p>
-                </div>
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Posturas forzadas y estrés laboral</h3>
-                  <p className="text-slate-400 text-xs">Tareas prolongadas o presión asistencial. Planifique los trabajos y comunique cualquier incidencia al responsable.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-purple-500 rounded-full"></span> 4. Normas Generales
-              </h2>
-              <ul className="list-disc pl-5 space-y-2 text-slate-300 text-xs bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                <li>Acceder únicamente a las zonas autorizadas.</li>
-                <li>Utilizar los EPIs obligatorios para la actividad.</li>
-                <li>Mantener orden y limpieza, sin bloquear salidas de emergencia.</li>
-                <li>Comunicar de inmediato cualquier incidente o situación de riesgo.</li>
-              </ul>
-            </div>
-
             <div className="pt-4 border-t border-slate-700">
               <button 
-                onClick={() => setCurrentView('form')}
+                onClick={() => { setReadInf(true); setCurrentView('form'); }}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl text-sm shadow-lg shadow-emerald-900/50 transition flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-5 h-5" /> He leído y comprendido - Volver al formulario
               </button>
             </div>
-
           </div>
         </div>
       </div>
@@ -154,7 +151,7 @@ export default function AppQR() {
   }
 
   // ==========================================
-  // PÁGINA WEB: MEDIDAS DE EMERGENCIA (neuralmed.vercel.app)
+  // PÁGINA WEB: MEDIDAS DE EMERGENCIA (MED)
   // ==========================================
   if (currentView === 'med') {
     return (
@@ -172,15 +169,14 @@ export default function AppQR() {
               </div>
             </div>
             <button 
-              onClick={() => setCurrentView('form')}
+              onClick={() => { setReadMed(true); setCurrentView('form'); }}
               className="bg-white hover:bg-purple-50 text-purple-900 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-md"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al formulario
+              <ArrowLeft className="w-4 h-4" /> Entendido y Volver
             </button>
           </div>
 
           <div className="p-6 sm:p-8 space-y-6 text-xs sm:text-sm leading-relaxed text-slate-300 overflow-y-auto max-h-[75vh]">
-            
             <div className="bg-purple-950/40 border border-purple-800/60 p-4 rounded-2xl text-purple-200">
               <p className="font-semibold">
                 Las empresas proveedoras, contratistas y personal externo que accedan a las instalaciones deberán conocer y cumplir estrictamente las medidas de emergencia establecidas.
@@ -201,23 +197,7 @@ export default function AppQR() {
 
             <div className="space-y-3">
               <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-amber-500 rounded-full"></span> 2. Prevención y Actuación ante Incendios
-              </h2>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Medidas Preventivas</h3>
-                  <p className="text-slate-400 text-xs">Mantenga orden y limpieza. No sobrecargue enchufes ni obstaculice salidas de emergencia o extintores.</p>
-                </div>
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">En caso de Conato</h3>
-                  <p className="text-slate-400 text-xs">Aviso inmediato. Si el fuego es pequeño y tiene formación, use el extintor. Si es peligroso, evacúe cerrando puertas a su paso.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> 3. Normas de Evacuación
+                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> 2. Normas de Evacuación
               </h2>
               <ul className="list-disc pl-5 space-y-2 text-slate-300 text-xs bg-slate-900/60 p-4 rounded-xl border border-slate-700">
                 <li>Abandonar el edificio de forma ordenada y sin correr por las vías señalizadas.</li>
@@ -228,27 +208,7 @@ export default function AppQR() {
 
             <div className="space-y-3">
               <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full"></span> 4. Primeros Auxilios y Sustancias
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Primeros Auxilios</h3>
-                  <p className="text-slate-400 text-xs">Aplica PAS: Proteger, Avisar y Socorrer. Solicite asistencia médica.</p>
-                </div>
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Paquetes Suspectos</h3>
-                  <p className="text-slate-400 text-xs">No manipular. Aleje a las personas e informe de inmediato.</p>
-                </div>
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-700">
-                  <h3 className="font-bold text-white text-xs mb-1">Derrames Químicos</h3>
-                  <p className="text-slate-400 text-xs">Avise al responsable sin intervenir sin formación ni EPIs.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-2 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-rose-500 rounded-full"></span> 5. Teléfonos de Emergencia Clave
+                <span className="w-2.5 h-2.5 bg-rose-500 rounded-full"></span> 3. Teléfonos de Emergencia Clave
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="bg-rose-950/50 border border-rose-800/60 p-3 rounded-xl">
@@ -272,13 +232,12 @@ export default function AppQR() {
 
             <div className="pt-4 border-t border-slate-700">
               <button 
-                onClick={() => setCurrentView('form')}
+                onClick={() => { setReadMed(true); setCurrentView('form'); }}
                 className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl text-sm shadow-lg shadow-purple-900/50 transition flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-5 h-5" /> He leído y comprendido - Volver al formulario
               </button>
             </div>
-
           </div>
         </div>
       </div>
@@ -341,7 +300,7 @@ export default function AppQR() {
   }
 
   // ==========================================
-  // VISTA PRINCIPAL: FORMULARIO Y ACCESO A WEB VIEWS
+  // VISTA PRINCIPAL: FORMULARIO
   // ==========================================
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 p-4 max-w-lg mx-auto justify-center">
@@ -358,27 +317,48 @@ export default function AppQR() {
         <div className="p-6 space-y-6">
           
           <div className="space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Paso 1: Consulta obligatoria previa
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <span>Paso 1: Consulta obligatoria previa</span>
+              {readInf && readMed && (
+                <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
+                  ✓ Todo leído
+                </span>
+              )}
             </h2>
             
             <div className="grid grid-cols-1 gap-2.5">
               <button 
                 type="button"
                 onClick={() => setCurrentView('inf')}
-                className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm w-full text-left"
+                className={`p-3.5 border rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm w-full text-left ${
+                  readInf 
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                    : 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
+                }`}
               >
-                <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> Información de Riesgos (neuralinf)</span>
-                <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded">Ver Web</span>
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Información de Riesgos
+                </span>
+                <span className={`text-[10px] px-2.5 py-1 rounded-lg text-white font-bold ${readInf ? 'bg-emerald-600' : 'bg-amber-600'}`}>
+                  {readInf ? '✓ Leído' : 'Lectura obligatoria'}
+                </span>
               </button>
 
               <button 
                 type="button"
                 onClick={() => setCurrentView('med')}
-                className="p-3.5 bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm w-full text-left"
+                className={`p-3.5 border rounded-xl text-xs font-bold flex items-center justify-between transition shadow-sm w-full text-left ${
+                  readMed 
+                    ? 'bg-purple-50 text-purple-800 border-purple-300' 
+                    : 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
+                }`}
               >
-                <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> Medidas de Emergencia (neuralmed)</span>
-                <span className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded">Ver Web</span>
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Medidas de Emergencia
+                </span>
+                <span className={`text-[10px] px-2.5 py-1 rounded-lg text-white font-bold ${readMed ? 'bg-purple-600' : 'bg-amber-600'}`}>
+                  {readMed ? '✓ Leído' : 'Lectura obligatoria'}
+                </span>
               </button>
             </div>
           </div>
@@ -456,9 +436,21 @@ export default function AppQR() {
             <button 
               type="submit" 
               disabled={submitting}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition"
+              className={`w-full py-3.5 font-bold rounded-xl text-sm shadow-lg flex items-center justify-center gap-2 transition ${
+                (!readInf || !readMed) 
+                  ? 'bg-slate-300 text-slate-600 cursor-not-allowed shadow-none' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
-              <UserCheck className="w-5 h-5" /> {submitting ? 'Generando pase...' : 'Validar y Generar Pase de Entrada'}
+              {(!readInf || !readMed) ? (
+                <>
+                  <Lock className="w-4 h-4" /> Lee los documentos previos para desbloquear
+                </>
+              ) : (
+                <>
+                  <UserCheck className="w-5 h-5" /> {submitting ? 'Registrando acceso...' : 'Validar y Generar Pase de Entrada'}
+                </>
+              )}
             </button>
           </form>
 
